@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            box-sizing: border-box;
+            margin: 0px;
+            padding: 0px;
+            
+        }
+        #h1{
+            color: #aaa;
+        }
+        body{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+
+        }
+        .container{
+            margin-top: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid green;
+            border-radius: 6px;
+            box-shadow: 0px 0px 20px 0px #aaa;
+        }
+        .in{
+            width: 10rem;
+            height: 2rem;
+            border-radius: 5px;
+            box-shadow: 0px 0px 20px 0px #aaa;
+            text-align: center;
+        }
+        .sub{
+            background-color: rgb(30, 210, 204);
+            color: whitesmoke;
+            border-radius: 3px;
+            width: 3rem;
+        }
+        .lt{
+            margin-top: 5px;
+        }
+        #chat-log{
+            box-shadow: 0px 0px 20px 0px #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <h1 id="h1">Enter the chat room</h1>
+    <br>
+    
+    <form name="myFirstForm" method="POST" action=""> 
+        {% csrf_token %}
+        <input type="text" name="text" class="in" placeholder="enter the chat room"> 
+        <input type="submit" class="sub "> 
+     </form> 
+    
+       
+    <br>
+
+    <textarea id="chat-log" rows="8" cols="30">
+     {% for chat in chats %}
+        {{chat.content}}
+     {% endfor %}   
+    </textarea>
+    <br>
+    <input type="text" id="chat_input" class="in" placeholder="write">
+    <button type="submit" id="send" class="sub lt">send</button>
+    </div>
+    {{text|json_script:"group_name"}}
+    <script>
+        const group=JSON.parse(document.getElementById('group_name').textContent)
+        var ws=new WebSocket('ws://127.0.0.1:8000/ws/sc/'+group+'/')
+        ws.onopen=function(){
+           console.log("connection established")
+           document.getElementById('h1').textContent="Welcome To " + group + " Group "
+        }
+        ws.onmessage=function(event){
+           console.log(event.data)
+           data=JSON.parse(event.data)
+           document.getElementById('chat-log').value+=(data.user+ " -> : " + data.msg +'\n')
+           
+        }
+        ws.onerror=function(event){
+           console.log(event)
+        }
+        ws.onclose=function(event){
+           console.log(event)
+        }
+        document.getElementById('send').onclick=function(e){
+            var msg=document.getElementById('chat_input').value
+            ws.send(JSON.stringify({
+                'msg':msg
+            }))
+            document.getElementById('chat_input').value=''
+        }
+    </script>
+</body>
+</html>
